@@ -4,7 +4,7 @@ El usuario escribe y el chat responde exactamente lo mismo (efecto espejo).
 """
 
 import streamlit as st
-from utils.chat import send_message
+from utils.chat import send_message, save_label
 from dotenv import load_dotenv
 
 load_dotenv()  # Cargar variables de entorno desde .env
@@ -37,6 +37,9 @@ if prompt:
 
     # Obtener respuesta (espejo)
     assistant_text = send_message(prompt)
+
+    # Guardar etiqueta
+    save_label(prompt, assistant_text)
 
     # Stream simulando salida incremental
     with st.chat_message("assistant"):

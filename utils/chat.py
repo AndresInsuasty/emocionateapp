@@ -31,3 +31,18 @@ def send_message(message: str) -> str:
     
     emotion = response.choices[0].message.content.strip().lower()
     return emotion
+
+def save_label(message: str, label: str, filename: str = "labels.csv"):
+    """Guarda el mensaje y su etiqueta en un archivo CSV."""
+    import csv
+    from os.path import exists
+    from datetime import datetime
+
+    file_exists = exists(filename)
+    
+    with open(filename, mode='a', newline='', encoding='utf-8') as file:
+        writer = csv.writer(file)
+        if not file_exists:
+            writer.writerow(["message", "label", "date"])  # Escribir encabezados si el archivo no existe
+        date = datetime.now().isoformat()
+        writer.writerow([message, label, date])
