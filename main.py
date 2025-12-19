@@ -5,6 +5,9 @@ El usuario escribe y el chat responde exactamente lo mismo (efecto espejo).
 
 import streamlit as st
 from utils.chat import send_message
+from dotenv import load_dotenv
+
+load_dotenv()  # Cargar variables de entorno desde .env
 
 
 st.set_page_config(page_title="Chat Espejo", page_icon="🪞")
