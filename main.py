@@ -4,7 +4,8 @@ El usuario escribe y el chat responde exactamente lo mismo (efecto espejo).
 """
 
 import streamlit as st
-from utils.chat import send_message, save_label
+from utils.chat import send_message 
+from utils.manage_files import save_label
 from dotenv import load_dotenv
 
 load_dotenv()  # Cargar variables de entorno desde .env
@@ -20,41 +21,57 @@ DEFAULT_PROMPT = "Escribe tu mensaje..."
 if "messages" not in st.session_state:
     # Cada elemento: {'role': 'user'|'assistant', 'content': str}
     st.session_state.messages = []
+if "user_id" not in st.session_state:
+    st.session_state.user_id = ""
 
-# Mostrar historial al recargar
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+# Solicitar identificación en una fila horizontal
+cols = st.columns([1, 3])
+with cols[0]:
+    st.markdown("**ID usuario**")
+with cols[1]:
+    st.text_input("", key="user_id", placeholder="Introduce tu ID para habilitar el chat")
 
+if not st.session_state.user_id:
+    st.warning("Proporcione identificación para habilitar el chat.")
+    st.text_input("Chat deshabilitado hasta que se proporcione ID", disabled=True)
+else:
+    # Mostrar historial al recargar
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
 
-# Input del usuario usando st.chat_input (estilo del ejemplo)
-prompt = st.chat_input(DEFAULT_PROMPT)
-if prompt:
-    # Añadir mensaje del usuario inmediatamente
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
+    # Input del usuario usando st.chat_input (estilo del ejemplo)
+    prompt = st.chat_input(DEFAULT_PROMPT)
+    if prompt:
+        # Añadir mensaje del usuario inmediatamente
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.markdown(prompt)
 
-    # Obtener respuesta (espejo)
-    assistant_text = send_message(prompt)
+        # Obtener respuesta (espejo)
+        assistant_text = send_message(prompt)
 
-    # Guardar etiqueta
-    save_label(prompt, assistant_text)
-
-    # Stream simulando salida incremental
-    with st.chat_message("assistant"):
-        placeholder = st.empty()
-        text_so_far = ""
+        # Guardar etiqueta
         try:
-            for token in str(assistant_text).split():
-                text_so_far += token + " "
-                placeholder.markdown(text_so_far)
+            save_label(prompt, assistant_text)
         except Exception:
-            # Fallback: mostrar todo
-            placeholder.markdown(assistant_text)
+            # Si la función de guardado falla, continuar sin bloquear la UI
+            pass
 
-    # Guardar respuesta en el historial
-    st.session_state.messages.append({"role": "assistant", "content": assistant_text})
+        # Stream simulando salida incremental
+        with st.chat_message("assistant"):
+            placeholder = st.empty()
+            text_so_far = ""
+            try:
+                for token in str(assistant_text).split():
+                    text_so_far += token + " "
+                    placeholder.markdown(text_so_far)
+            except Exception:
+                # Fallback: mostrar todo
+                placeholder.markdown(assistant_text)
+
+        # Guardar respuesta en el historial
+        st.session_state.messages.append({"role": "assistant", "content": assistant_text})
 
 
 st.markdown("---")
